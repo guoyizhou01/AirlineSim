@@ -4,7 +4,8 @@ Create a sortable report of active flight numbers from one airport to airports
 listed by AS Route Map.
 
 Inputs, by default:
-  - Guo Air _ Otto _ AirlineSim.html
+  - <AIRLINESIM_AIRLINE_NAME> _ <AIRLINESIM_GAME_WORLD> _ AirlineSim.html
+    with Guo Air _ Otto _ AirlineSim.html as the fallback
   - AS Route Map _ Find Airports.html
 
 Example:
@@ -16,6 +17,7 @@ The script uses only Python's standard library.
 
 import argparse
 import html
+import os
 import re
 from collections import defaultdict
 from datetime import datetime
@@ -23,10 +25,25 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 
-DEFAULT_SCHEDULE_HTML = "Guo Air _ Otto _ AirlineSim.html"
+DEFAULT_AIRLINE_NAME = "Guo Air"
+DEFAULT_GAME_WORLD = "Otto"
 DEFAULT_AIRPORTS_HTML = "AS Route Map _ Find Airports.html"
 DEFAULT_OUTPUT_HTML = "active_flights_by_airport.html"
 DEFAULT_AIRPORT = "JFK"
+AIRLINE_ENV = "AIRLINESIM_AIRLINE_NAME"
+WORLD_ENV = "AIRLINESIM_GAME_WORLD"
+
+
+def airlinesim_airline_name():
+    return os.environ.get(AIRLINE_ENV, DEFAULT_AIRLINE_NAME)
+
+
+def airlinesim_game_world():
+    return os.environ.get(WORLD_ENV, DEFAULT_GAME_WORLD)
+
+
+def schedule_file_name():
+    return f"{airlinesim_airline_name()} _ {airlinesim_game_world()} _ AirlineSim.html"
 
 
 def clean_text(value):
@@ -672,6 +689,7 @@ def render_html(rows, origin, schedule_path, airports_path):
 
 
 def parse_args():
+    default_schedule_html = schedule_file_name()
     parser = argparse.ArgumentParser(
         description="Compare an AirlineSim schedule to AS Route Map airports and write a sortable HTML report."
     )
@@ -684,8 +702,8 @@ def parse_args():
     parser.add_argument(
         "-s",
         "--schedule",
-        default=DEFAULT_SCHEDULE_HTML,
-        help=f"Saved AirlineSim schedule HTML. Default: {DEFAULT_SCHEDULE_HTML}",
+        default=default_schedule_html,
+        help=f"Saved AirlineSim schedule HTML. Default: {default_schedule_html}",
     )
     parser.add_argument(
         "-m",

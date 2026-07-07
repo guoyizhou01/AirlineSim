@@ -19,6 +19,30 @@ This repository contains small Python utilities for working with saved
 AirlineSim and AS Route Map HTML pages. Both scripts use only the Python
 standard library.
 
+## Environment Setup
+
+Use `configure_airlinesim_env.py` to save your AirlineSim airline name and game
+world as environment variables:
+
+- `AIRLINESIM_AIRLINE_NAME`
+- `AIRLINESIM_GAME_WORLD`
+
+Run it from the repository folder:
+
+```powershell
+python configure_airlinesim_env.py
+```
+
+The script asks for your airline name, searches the available files for the best
+match, and asks you to confirm it. If it cannot find a match above 50%, it
+prints an error and exits. If only one game world is found, it uses that world;
+otherwise, it asks you to choose one.
+
+When prompted, choose whether to permanently save the values. On Windows, the
+permanent option uses `setx`, so open a new terminal before relying on those
+variables. The script also prints PowerShell commands you can run to set the
+variables in the current terminal immediately.
+
 ## Input Files
 
 Save the required pages as HTML files before running the scripts.
@@ -43,7 +67,8 @@ origin airport to each destination in the route-map list.
 
 Default inputs:
 
-- `Guo Air _ Otto _ AirlineSim.html`
+- `<AIRLINESIM_AIRLINE_NAME> _ <AIRLINESIM_GAME_WORLD> _ AirlineSim.html`
+  if environment variables are set; otherwise `Guo Air _ Otto _ AirlineSim.html`
 - `AS Route Map _ Find Airports.html`
 
 Default output:
@@ -61,7 +86,8 @@ python active_flights_by_airport.py --airport JFK --schedule "Guo Air _ Otto _ A
 Options:
 
 - `--airport`, `-a`: origin airport IATA code. Default: `JFK`.
-- `--schedule`, `-s`: saved AirlineSim schedule HTML file.
+- `--schedule`, `-s`: saved AirlineSim schedule HTML file. By default, this is
+  inferred from `AIRLINESIM_AIRLINE_NAME` and `AIRLINESIM_GAME_WORLD`.
 - `--map`, `-m`: saved AS Route Map Find Airports HTML file.
 - `--output`, `-o`: output HTML report file.
 
@@ -77,9 +103,13 @@ and filters.
 
 Default inputs:
 
-- `DFW _ Otto _ AirlineSim.html`, inferred from `--airport DFW`
+- `DFW _ <AIRLINESIM_GAME_WORLD> _ AirlineSim.html`, inferred from
+  `--airport DFW` if `AIRLINESIM_GAME_WORLD` is set; otherwise
+  `DFW _ Otto _ AirlineSim.html`
 - `AS Route Map _ Find Airports.html`
-- `Load monitoring _ Otto _ AirlineSim.html`
+- `Load monitoring _ <AIRLINESIM_GAME_WORLD> _ AirlineSim.html` if
+  `AIRLINESIM_GAME_WORLD` is set; otherwise
+  `Load monitoring _ Otto _ AirlineSim.html`
 
 Default output:
 
@@ -97,11 +127,12 @@ Options:
 
 - `--airport`: origin airport IATA code. Default: `DFW`.
 - `--station-file`: saved AirlineSim station load statistics HTML. If omitted,
-  the script infers `<AIRPORT> _ Otto _ AirlineSim.html`.
+  the script infers `<AIRPORT> _ <AIRLINESIM_GAME_WORLD> _ AirlineSim.html`.
 - `--route-map-file`: saved AS Route Map airport-list HTML file.
 - `--load-monitoring-file`: saved AirlineSim Load Monitoring HTML file used for
-  Economy route-load aggregation. If the file is missing, the script still runs
-  and leaves Economy route-load values blank.
+  Economy route-load aggregation. By default, this is inferred from
+  `AIRLINESIM_GAME_WORLD`. If the file is missing, the script still runs and
+  leaves Economy route-load values blank.
 - `--output-file`: output HTML file.
 
 Open the generated route map in a browser. It adds Economy route load, average

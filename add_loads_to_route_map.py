@@ -3,9 +3,11 @@
 Merge AirlineSim station passenger-load data into an AS Route Map airport list.
 
 Default inputs:
-  - --airport DFW, which infers DFW _ Otto _ AirlineSim.html
+  - --airport DFW, which infers DFW _ <AIRLINESIM_GAME_WORLD> _ AirlineSim.html
+    with DFW _ Otto _ AirlineSim.html as the fallback
   - AS Route Map _ Find Airports.html
-  - Load monitoring _ Otto _ AirlineSim.html
+  - Load monitoring _ <AIRLINESIM_GAME_WORLD> _ AirlineSim.html
+    with Load monitoring _ Otto _ AirlineSim.html as the fallback
 
 Default output file:
   - AS Route Map _ Find Airports with Loads.html
@@ -17,6 +19,7 @@ from __future__ import annotations
 
 import argparse
 import html
+import os
 import re
 from dataclasses import dataclass
 from html.parser import HTMLParser
@@ -25,10 +28,19 @@ from typing import Dict, List, Optional
 
 
 DEFAULT_AIRPORT = "DFW"
+DEFAULT_GAME_WORLD = "Otto"
 DEFAULT_ROUTE_MAP_FILE = "AS Route Map _ Find Airports.html"
-DEFAULT_LOAD_MONITORING_FILE = "Load monitoring _ Otto _ AirlineSim.html"
 DEFAULT_OUTPUT_FILE = "AS Route Map _ Find Airports with Loads.html"
 ROUTE_MAP_REMOVE_COLUMN_INDEXES = {3, 5, 7, 8}  # ICAO, TZ, Cargo, Bearing
+WORLD_ENV = "AIRLINESIM_GAME_WORLD"
+
+
+def airlinesim_game_world() -> str:
+    return os.environ.get(WORLD_ENV, DEFAULT_GAME_WORLD)
+
+
+def load_monitoring_file_name() -> str:
+    return f"Load monitoring _ {airlinesim_game_world()} _ AirlineSim.html"
 
 
 @dataclass
@@ -194,7 +206,7 @@ def normalize_airport_code(value: str) -> str:
 
 
 def station_file_for_airport(airport: str) -> str:
-    return f"{airport} _ Otto _ AirlineSim.html"
+    return f"{airport} _ {airlinesim_game_world()} _ AirlineSim.html"
 
 
 def read_text(path: Path) -> str:
@@ -771,6 +783,7 @@ def enrich_route_map(
 
 
 def parse_args() -> argparse.Namespace:
+    default_load_monitoring_file = load_monitoring_file_name()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--airport",
@@ -783,13 +796,13 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help=(
             "Saved AirlineSim station load HTML file. "
-            f"If omitted, this is inferred as '<AIRPORT> _ Otto _ AirlineSim.html' from --airport."
+            f"If omitted, this is inferred as '<AIRPORT> _ {airlinesim_game_world()} _ AirlineSim.html' from --airport."
         ),
     )
     parser.add_argument("--route-map-file", default=DEFAULT_ROUTE_MAP_FILE, help="Saved AS Route Map airport-list HTML file.")
     parser.add_argument(
         "--load-monitoring-file",
-        default=DEFAULT_LOAD_MONITORING_FILE,
+        default=default_load_monitoring_file,
         help="Saved AirlineSim Load Monitoring HTML file used for Economy route-load aggregation.",
     )
     parser.add_argument("--output-file", default=DEFAULT_OUTPUT_FILE, help="Destination HTML file to write.")
