@@ -19,33 +19,25 @@ This repository contains small Python utilities for working with saved
 AirlineSim and AS Route Map HTML pages. Both scripts use only the Python
 standard library.
 
-## Environment Setup
+## Supported Environments
 
-Use `configure_airlinesim_env.py` to save your AirlineSim airline name and game
-world as environment variables:
+These scripts are written for Python 3 and use only the standard library.
 
-- `AIRLINESIM_AIRLINE_NAME`
-- `AIRLINESIM_GAME_WORLD`
+Supported environments:
 
-Run it from the repository folder:
+- Windows PowerShell with Python 3. The permanent environment setup uses `setx`.
+- Linux with Python 3. The permanent environment setup updates `~/.profile`.
+- WSL with Python 3. The permanent environment setup updates the WSL user's
+  `~/.profile`, not the Windows user's environment.
+- macOS with Python 3. The permanent environment setup updates `~/.zprofile`.
 
-```powershell
-python configure_airlinesim_env.py
-```
-
-The script asks for your airline name, searches the available files for the best
-match, and asks you to confirm it. If it cannot find a match above 50%, it
-prints an error and exits. If only one game world is found, it uses that world;
-otherwise, it asks you to choose one.
-
-When prompted, choose whether to permanently save the values. On Windows, the
-permanent option uses `setx`, so open a new terminal before relying on those
-variables. The script also prints PowerShell commands you can run to set the
-variables in the current terminal immediately.
+After using the permanent save option, open a new terminal before relying on the
+new variables.
 
 ## Input Files
 
-Save the required pages as HTML files before running the scripts.
+Save the required pages as HTML files before running the setup script or report
+scripts.
 
 - AS Route Map airport list: use an appropriate filter at
   <https://www.asroutemap.info/find.asp>, then save the resulting page.
@@ -57,6 +49,51 @@ Save the required pages as HTML files before running the scripts.
   the page. Avoid selecting `48h until 72h` unless you specifically need that
   window. Using `any` for both Origin and Destination can be very slow for a
   large airline.
+
+## Environment Setup
+
+After saving the input files, use `configure_airlinesim_env.py` to save your
+AirlineSim airline name and game world as environment variables:
+
+- `AIRLINESIM_AIRLINE_NAME`
+- `AIRLINESIM_GAME_WORLD`
+
+Run it from the repository folder:
+
+Windows PowerShell:
+
+```powershell
+python configure_airlinesim_env.py
+```
+
+Linux, WSL, or macOS:
+
+```sh
+python3 configure_airlinesim_env.py
+```
+
+The script asks for your airline name, searches the available files for the best
+match, and asks you to confirm it. If it cannot find a match above 50%, it
+prints an error and exits. If only one game world is found, it uses that world;
+otherwise, it asks you to choose one.
+
+When prompted, choose whether to permanently save the values. The script also
+prints commands you can run to set the variables in the current terminal
+immediately:
+
+Windows PowerShell:
+
+```powershell
+$env:AIRLINESIM_AIRLINE_NAME = 'Guo Air'
+$env:AIRLINESIM_GAME_WORLD = 'Otto'
+```
+
+Linux, WSL, or macOS:
+
+```sh
+export AIRLINESIM_AIRLINE_NAME='Guo Air'
+export AIRLINESIM_GAME_WORLD='Otto'
+```
 
 ## active_flights_by_airport.py
 

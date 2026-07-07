@@ -7,7 +7,8 @@ Environment variables:
   AIRLINESIM_GAME_WORLD
 
 The variables are set for this script process. On Windows, the permanent option
-also uses `setx`, which affects future terminals.
+also uses `setx`, which affects future terminals. On Linux and WSL it updates
+`~/.profile`; on macOS it updates `~/.zprofile`.
 """
 
 from __future__ import annotations
@@ -147,6 +148,17 @@ def choose_world(worlds: dict[str, set[str]]) -> str | None:
     return names[int(choice) - 1]
 
 
+def posix_shell_quote(value: str) -> str:
+    return "'" + value.replace("'", "'\"'\"'") + "'"
+
+
+def profile_path_for_platform() -> Path:
+    system = platform.system().lower()
+    if system == "darwin":
+        return Path.home() / ".zprofile"
+    return Path.home() / ".profile"
+
+
 def save_permanently(name: str, value: str) -> bool:
     if platform.system().lower() == "windows":
         try:
@@ -156,15 +168,18 @@ def save_permanently(name: str, value: str) -> bool:
             return False
         return True
 
-    profile = Path.home() / ".profile"
-    line = f'export {name}="{value}"\n'
+    profile = profile_path_for_platform()
+    line = f"export {name}={posix_shell_quote(value)}"
     try:
         existing = profile.read_text(encoding="utf-8") if profile.exists() else ""
-        if f"export {name}=" not in existing:
-            with profile.open("a", encoding="utf-8") as output:
-                output.write(line)
+        pattern = re.compile(rf"^export\s+{re.escape(name)}=.*$", flags=re.MULTILINE)
+        if pattern.search(existing):
+            updated = pattern.sub(line, existing)
+            profile.write_text(updated, encoding="utf-8")
         else:
-            print(f"Skipped permanent save for {name}; it already exists in {profile}.")
+            prefix = "" if not existing or existing.endswith("\n") else "\n"
+            with profile.open("a", encoding="utf-8") as output:
+                output.write(f"{prefix}{line}\n")
     except OSError as exc:
         print(f"Error: failed to update {profile}: {exc}")
         return False
@@ -172,11 +187,17 @@ def save_permanently(name: str, value: str) -> bool:
 
 
 def print_current_terminal_commands(airline: str, world: str) -> None:
-    airline_value = airline.replace("'", "''")
-    world_value = world.replace("'", "''")
-    print("To set these for the current PowerShell terminal, run:")
-    print(f"$env:{AIRLINE_ENV} = '{airline_value}'")
-    print(f"$env:{WORLD_ENV} = '{world_value}'")
+    if platform.system().lower() == "windows":
+        airline_value = airline.replace("'", "''")
+        world_value = world.replace("'", "''")
+        print("To set these for the current PowerShell terminal, run:")
+        print(f"$env:{AIRLINE_ENV} = '{airline_value}'")
+        print(f"$env:{WORLD_ENV} = '{world_value}'")
+        return
+
+    print("To set these for the current shell, run:")
+    print(f"export {AIRLINE_ENV}={posix_shell_quote(airline)}")
+    print(f"export {WORLD_ENV}={posix_shell_quote(world)}")
 
 
 def main() -> int:
