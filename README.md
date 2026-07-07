@@ -1,0 +1,109 @@
+# AirlineSim Route Planning Tools
+
+## IMPORTANT: AI-Written Scripts
+
+**These scripts were written by AI. Review the code and outputs yourself before
+using them for any planning decision.**
+
+The scripts parse saved HTML pages and generate new local HTML reports. AI-written
+code can contain bugs, incorrect assumptions, fragile parsing logic, misleading
+calculations, or incomplete handling of edge cases. AirlineSim and AS Route Map
+pages may also change over time, which can cause the scripts to silently miss,
+misread, or mislabel data. Use the generated reports as a convenience tool only,
+not as an authoritative source.
+
+By using these scripts, you accept the risk that the output may be wrong and
+that route, scheduling, or fleet decisions based on it may be suboptimal.
+
+This repository contains small Python utilities for working with saved
+AirlineSim and AS Route Map HTML pages. Both scripts use only the Python
+standard library.
+
+## Input Files
+
+Save the required pages as HTML files before running the scripts.
+
+- AS Route Map airport list: use an appropriate filter at
+  <https://www.asroutemap.info/find.asp>, then save the resulting page.
+- Airport load by route: in AirlineSim, go to
+  `Operations -> Stations -> click on station name -> view station on top right -> Load Statistics`,
+  then save the page.
+- Load monitoring: in AirlineSim, go to
+  `Commercial -> Load Monitoring -> set reasonable filter -> submit`, then save
+  the page. Avoid selecting `48h until 72h` unless you specifically need that
+  window. Using `any` for both Origin and Destination can be very slow for a
+  large airline.
+
+## active_flights_by_airport.py
+
+Use this script mostly for destination expansion. It compares a saved
+AirlineSim schedule with an AS Route Map airport list and creates a sortable
+HTML report showing how many active flight numbers already exist from one
+origin airport to each destination in the route-map list.
+
+Default inputs:
+
+- `Guo Air _ Otto _ AirlineSim.html`
+- `AS Route Map _ Find Airports.html`
+
+Default output:
+
+- `active_flights_by_airport.html`
+
+Examples:
+
+```powershell
+python active_flights_by_airport.py
+python active_flights_by_airport.py --airport DFW --output dfw_active_flights.html
+python active_flights_by_airport.py --airport JFK --schedule "Guo Air _ Otto _ AirlineSim.html" --map "AS Route Map _ Find Airports.html" --output jfk_active_flights.html
+```
+
+Options:
+
+- `--airport`, `-a`: origin airport IATA code. Default: `JFK`.
+- `--schedule`, `-s`: saved AirlineSim schedule HTML file.
+- `--map`, `-m`: saved AS Route Map Find Airports HTML file.
+- `--output`, `-o`: output HTML report file.
+
+Open the generated report in a browser. It includes sortable columns, country
+and demand filters, a minimum runway filter, and row highlighting.
+
+## add_loads_to_route_map.py
+
+Use this script mostly for adding flights to existing routes. It merges
+AirlineSim station load statistics and optional Load Monitoring data into a
+saved AS Route Map airport list, then writes a new HTML file with load columns
+and filters.
+
+Default inputs:
+
+- `DFW _ Otto _ AirlineSim.html`, inferred from `--airport DFW`
+- `AS Route Map _ Find Airports.html`
+- `Load monitoring _ Otto _ AirlineSim.html`
+
+Default output:
+
+- `AS Route Map _ Find Airports with Loads.html`
+
+Examples:
+
+```powershell
+python add_loads_to_route_map.py
+python add_loads_to_route_map.py --airport JFK --station-file "JFK _ Otto _ AirlineSim.html"
+python add_loads_to_route_map.py --airport LAX --route-map-file "AS Route Map _ Find Airports.html" --load-monitoring-file "Load monitoring _ Otto _ AirlineSim.html" --output-file "LAX route map with loads.html"
+```
+
+Options:
+
+- `--airport`: origin airport IATA code. Default: `DFW`.
+- `--station-file`: saved AirlineSim station load statistics HTML. If omitted,
+  the script infers `<AIRPORT> _ Otto _ AirlineSim.html`.
+- `--route-map-file`: saved AS Route Map airport-list HTML file.
+- `--load-monitoring-file`: saved AirlineSim Load Monitoring HTML file used for
+  Economy route-load aggregation. If the file is missing, the script still runs
+  and leaves Economy route-load values blank.
+- `--output-file`: output HTML file.
+
+Open the generated route map in a browser. It adds Economy route load, average
+station load, and recent weekly load columns, plus filters for country, load
+threshold, and demand range.
